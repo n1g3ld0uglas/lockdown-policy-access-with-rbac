@@ -35,3 +35,36 @@ https://docs.tigera.io/getting-started/cnx/access-the-manager
 
 
 # Create a lesser-privleged service account - 'Taher'
+
+The roles and bindings in this file provide a minimum starting point for setting up RBAC
+```
+wget https://docs.tigera.io/getting-started/kubernetes/installation/hosted/cnx/demo-manifests/min-ui-user-rbac.yaml
+```
+
+Run this command to replace with the name or email of the user you are permitting. In this case it's 'Taher'
+```
+sed -i -e 's/<USER>/taher/g' min-ui-user-rbac.yaml
+```
+
+Use the following command to install the bindings
+```
+kubectl apply -f min-ui-user-rbac.yaml
+```
+
+Create a 2nd Service account 'Taher' with limit permissions
+```
+kubectl create serviceaccount taher
+```
+
+Create an Admin user with limited UI access to the Calico Enterprise Manager:
+
+```
+kubectl create clusterrolebinding taher-access --clusterrole tigera-ui-user --serviceaccount default:taher
+```
+
+Get the token from the service account 'Taher'
+```
+kubectl get secret $(kubectl get serviceaccount taher -o jsonpath='{range .secrets[*]}{.name}{"\n"}{end}' | grep token) -o go-template='{{.data.token | base64decode}}' && echo
+```
+
+# Create a service account with full access to 1 tier - 'Jessie'
