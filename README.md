@@ -67,4 +67,38 @@ Get the token from the service account 'Taher'
 kubectl get secret $(kubectl get serviceaccount taher -o jsonpath='{range .secrets[*]}{.name}{"\n"}{end}' | grep token) -o go-template='{{.data.token | base64decode}}' && echo
 ```
 
-# Create a service account with full access to 1 tier - 'Jessie'
+# Create a service account with read-only access to all tiers - 'Jessie'
+
+```
+kubectl create sa jessie
+```
+
+We will give Jessie the same 'tigera'ui-user' cluster role that we assigned to Taher
+```
+kubectl create clusterrolebinding jessie-access --clusterrole tigera-ui-user --serviceaccount default:jessie
+```
+
+Create the 'all-tier-reader' custom role
+```
+kubectl apply -f https://github.com/n1g3ld0uglas/netpolTest/blob/main/tiers/all-tier-reader.yaml
+```
+
+Assign the newly-created cluster role to a binding 'jessie-get':
+```
+kubectl create clusterrolebinding jessie-get --clusterrole product-tier-policy-cruder --serviceaccount default:jessie
+```
+
+ClusterRole is used to provide read access to all policy resource types across all tiers
+```
+kubectl apply -f https://raw.githubusercontent.com/n1g3ld0uglas/netpolTest/main/tiers/all-tier-reader.yaml
+```
+
+Assign a newly-create cluster role for read-only access across tiers:
+```
+kubectl create clusterrolebinding jessie-get --clusterrole all-tier-policy-reader --serviceaccount default:jessie
+```
+
+Get the token from the service account 'Jessie'
+```
+kubectl get secret $(kubectl get serviceaccount jessie -o jsonpath='{range .secrets[*]}{.name}{"\n"}{end}' | grep token) -o go-template='{{.data.token | base64decode}}' && echo
+```
