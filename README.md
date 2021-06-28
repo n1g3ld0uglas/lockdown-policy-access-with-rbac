@@ -102,3 +102,102 @@ Get the token from the service account 'Jessie'
 ```
 kubectl get secret $(kubectl get serviceaccount jessie -o jsonpath='{range .secrets[*]}{.name}{"\n"}{end}' | grep token) -o go-template='{{.data.token | base64decode}}' && echo
 ```
+
+
+
+The following sample manifest creates RBAC for three users: Paul, Candice and David.
+1) Paul has permissions to create/modify/delete the report schedules and configuration, but does not have permission to export generated reports from the UI.
+
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: tigera-compliance-manage-report-config
+rules:
+- apiGroups: ["projectcalico.org"]
+  resources: ["globalreports"]
+  verbs: ["*"]
+- apiGroups: ["projectcalico.org"]
+  resources: ["globalreports/status"]
+  verbs: ["get", "list", "watch"]
+```
+
+```
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: tigera-compliance-manage-report-config
+subjects:
+- kind: User
+  name: paul
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: tigera-compliance-manage-report-config
+  apiGroup: rbac.authorization.k8s.io
+```
+
+2) Candice has permissions to list and export generated reports from the UI, but cannot modify the report schedule or configuration.
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: tigera-compliance-list-download-all-reports
+rules:
+- apiGroups: ["projectcalico.org"]
+  resources: ["globalreports"]
+  verbs: ["get", "list"]
+- apiGroups: ["projectcalico.org"]
+  resources: ["globalreporttypes"]
+  verbs: ["get"]
+```
+
+```
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: tigera-compliance-list-download-all-reports
+subjects:
+- kind: User
+  name: candice
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: tigera-compliance-list-download-all-reports
+  apiGroup: rbac.authorization.k8s.io
+```
+
+3) David has permissions to list and export generated dev-inventory reports from the UI, but cannot list or download other reports, nor modify the report schedule or configuration.
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: tigera-compliance-list-download-dev-inventory
+rules:
+- apiGroups: ["projectcalico.org"]
+  resources: ["globalreports"]
+  verbs: ["list"]
+- apiGroups: ["projectcalico.org"]
+  resources: ["globalreports"]
+  verbs: ["get"]
+  resourceNames: ["dev-inventory"]
+- apiGroups: ["projectcalico.org"]
+  resources: ["globalreporttypes"]
+  verbs: ["get"]
+  resourceNames: ["dev-inventory"]
+```
+
+```
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: tigera-compliance-list-download-dev-inventory
+subjects:
+- kind: User
+  name: david
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: tigera-compliance-list-download-dev-inventory
+  apiGroup: rbac.authorization.k8s.io
+```
