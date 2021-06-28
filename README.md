@@ -103,6 +103,7 @@ Get the token from the service account 'Jessie'
 kubectl get secret $(kubectl get serviceaccount jessie -o jsonpath='{range .secrets[*]}{.name}{"\n"}{end}' | grep token) -o go-template='{{.data.token | base64decode}}' && echo
 ```
 
+# RBAC for Compliance Reports
 
 
 The following sample manifest creates RBAC for three users: Paul, Candice and David.
@@ -201,3 +202,13 @@ roleRef:
   name: tigera-compliance-list-download-dev-inventory
   apiGroup: rbac.authorization.k8s.io
 ```
+
+# RBAC for Logs & Events
+
+Elasticsearch resources are associated with the Kubernetes API group, lma.tigera.io. 
+You can grant access to resources per cluster - Default cluster name for CaliEnt is 'cluster'. 
+
+Each Elasticsearch resource is mapped to a specific RBAC resource name within the lma.tigera.io API group. 
+In Calico Enterprise Manager, Elasticsearch resources are called, indexes or indices.
+
+
